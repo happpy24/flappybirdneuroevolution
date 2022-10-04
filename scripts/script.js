@@ -1,17 +1,10 @@
-var bgDay, bgNight, ground, pipeGreenBottom, pipeGreenTop, pipeRedBottom, pipeRedTop, birdYellow, birdRed, birdBlue, taptap, gameOver, dieSOUND, hitSOUND, pointSOUND, swooshSOUND, wingSOUND;
+var bgDay, bgNight, ground, pipeGreenBottom, pipeGreenTop, pipeRedBottom, pipeRedTop, birdYellow, birdRed, birdBlue, taptap, gameOver;
 var gameSize = [1280, 720];
-var gamestate = 0;
+var gamestate = 1;
 var bird;
 var backdrops = [];
 var grounds = [];
 var pipes = [];
-var flaptapyv = 0;
-var flappybirdy = 100;
-var taptapy = 288;
-var pointy = -120;
-var pointyv = 8.5;
-var gox = -500; 
-var goxv = 30;
 var score = 0;
 var highscore = 0;
 var randompipe = ['green', 'red'];
@@ -40,13 +33,6 @@ function preload() {
 	gameOver = loadImage('sprites/gameOver.png');
 	flappybird = loadImage('sprites/flappybird.png');
 	scoreFont = loadFont('bit5x3.ttf');
-
-	// SOUNDS
-	dieSOUND = loadSound('sounds/die.mp3');
-	hitSOUND = loadSound('sounds/hit.mp3');
-	pointSOUND = loadSound('sounds/point.mp3');
-	swooshSOUND = loadSound('sounds/swoosh.mp3');
-	wingSOUND = loadSound('sounds/wing.mp3');
 }
 
 // SETUP
@@ -124,8 +110,6 @@ function menu() {
 	}
 
 	// SPRITES DRAW
-	image(flappybird, (width / 2) - (445 / 2), flappybirdy, 445, 120)
-	image(taptap, (width / 1.8) - (285 / 1.8), taptapy, 285 / 1.8, 245 / 1.8)
 	bird.idle();
 	bird.show();
 
@@ -144,15 +128,6 @@ function game() {
 		backdrops[i].update();
 		backdrops[i].show();
 	}
-
-	// SPRITE ANIMATION
-	if (!flappybirdy > -200) {
-		flaptapyv += 1;
-		flappybirdy += -flaptapyv;
-		taptapy += flaptapyv;
-		image(flappybird, (width / 2) - (445 / 2), flappybirdy, 445, 120)
-		image(taptap, (width / 1.8) - (285 / 1.8), taptapy, 285 / 1.8, 245 / 1.8)
-	}
 	
 	// PIPE DRAW
 	for (var i = 0; i < pipes.length; i++) {
@@ -163,29 +138,21 @@ function game() {
 		if (pipes[i].hits(bird)) {
 			console.log("HIT");
 			gamestate = 2;
-			hitSOUND.play();
-			dieSOUND.play();
 		} if (pipes[i].point(bird)) {
 			console.log("POINT");
 			score += 1;
-			pointSOUND.play();
 		}
 	}
 
 	// SCORE DRAW
-	if (pointyv > 0) {
-		pointyv -= 0.15;
-		pointy += pointyv
-	}
-	
-	text(score, width/2, pointy);
+	text(score, width/2, 100);
 
 	// BIRD GROUND DETECTION & DRAW & UPDATE
 	if (bird.y > height - 160 || bird.y < -20) {
 		console.log("HIT")
 		gamestate = 2;
-		hitSOUND.play();
 	} else {
+		bird.think(pipes);
 		bird.update();
 		bird.show();
 	}
@@ -210,16 +177,10 @@ function gameover() {
 	}
 
 	// SCORE DRAW & UPDATER
-	text(score, width/2, pointy);
+	text(score, width/2, 100);
 	if (score >= highscore) {
 		highscore = score;
 	}
-
-	if (goxv > 0) {
-		goxv -= 0.5;
-		gox += goxv
-	}
-	image(gameOver, gox, 200, 480, 105)
 
 	// BIRD DRAW
 	bird.dead();
@@ -229,41 +190,19 @@ function gameover() {
 	for (var i = 0; i < grounds.length; i++) {
 		grounds[i].show();
 	}
+	
+	gamestate = 1;
+	backdrops = [];
+	grounds = [];
+	pipes = [];
+	score = 0;
+	console.log(highscore);
+	setup();
 }
 
 // KEY DETECTION
-function keyPressed() {
-	if (key == ' ') {
-		if (gamestate == 0) {
-			// BIRD FLY & START GAME
-			bird.up();
-			wingSOUND.play();
-			gamestate = 1
-		}
-
-		if (gamestate == 1) {
-			// BIRD FLY
-			bird.up();
-			wingSOUND.play();
-		}
-
-		if (gamestate == 2) {
-			// RESET EVERYTHING
-			gamestate = 0;
-			backdrops = [];
-			grounds = [];
-			pipes = [];
-			flaptapyv = 0;
-			flappybirdy = 100;
-			taptapy = 288;
-			pointy = -120;
-			pointyv = 8.5;
-			gox = -500; 
-			goxv = 30;
-			score = 0;
-			console.log(highscore);
-			setup();
-			swooshSOUND.play();
-		}
-	}
-}
+// function keyPressed() {
+// 	if (key == ' ') {
+// 		bird.up();
+// 	}
+// }

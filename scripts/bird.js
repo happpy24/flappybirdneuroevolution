@@ -5,6 +5,8 @@ function Bird(img) {
 	this.gravity = 1;
 	this.vy = 0;
 
+	this.brain = new NeuralNetwork(4,4,1);
+
 	this.show = function() {
 		image(img, this.x, this.y, 51, 36);
 	}
@@ -31,6 +33,33 @@ function Bird(img) {
 		if (this.y > height - 160) {
 			this.y = height - 160;
 			this.vy = 0;
+		}
+	}
+
+	this.think = function(pipes) {
+
+		let closest = null;
+		let closestD = Infinity;
+		for (let i = 0; i < pipes.length; i++) {
+			let d = pipes[i].x - this.x;
+			if (i > 6) {
+				i = 0;
+			}
+			if (d < closestD && d > 0) {
+				closest = pipes[i]
+				closestD = d;
+			}
+		}
+		
+		let inputs = [];
+		inputs[0] = this.y / height;
+		inputs[1] = closest.y1 / height;
+		inputs[2] = closest.y2 / height;
+		inputs[3] = closest.x / width;
+			
+		let output = this.brain.predict(inputs);
+		if (output > 0.5) {
+			this.up();
 		}
 	}
 

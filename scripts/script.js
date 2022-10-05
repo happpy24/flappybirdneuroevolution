@@ -1,7 +1,9 @@
+const TOTAL = 500;
 var bgDay, bgNight, ground, pipeGreenBottom, pipeGreenTop, pipeRedBottom, pipeRedTop, birdYellow, birdRed, birdBlue, taptap, gameOver;
 var gameSize = [1280, 720];
-var gamestate = 1;
-var bird;
+var gamestate = 0;
+var birds = [];
+var savedBirds = [];
 var backdrops = [];
 var grounds = [];
 var pipes = [];
@@ -10,6 +12,8 @@ var highscore = 0;
 var randompipe = ['green', 'red'];
 var randombackdrop = ['day', 'night'];
 var randombird = ['yellow', 'red', 'blue'];
+
+// 16:00 MIN CODING CHALLENGE 2!!!!!!!
 
 function preload() {
 	// BACKGROUNDS
@@ -45,6 +49,7 @@ function setup() {
 	fill(255, 255, 255);
 	textAlign(CENTER);
 	textSize(80);
+	
 	// CREATE BACKDROPS + RANDOMIZER
 	var rbackdrop = random(randombackdrop);
 	for (var i = 0; i < 5; i++) {
@@ -77,15 +82,18 @@ function setup() {
 		grounds.push(ground);
 	}
 
-	// CREATE BIRD
-	var rbird = random(randombird);
-	if (rbird == 'yellow') {
-		bird = new Bird(birdYellow);
-	} else if (rbird == 'red') {
-		bird = new Bird(birdRed);
-	} else if (rbird == 'blue') {
-		bird = new Bird(birdBlue);
+	// CREATE POPULATION
+	for (let i = 0; i < TOTAL; i++) {
+		var rbird = random(randombird);
+		if (rbird == 'yellow') {
+			birds[i] = new Bird(birdYellow);
+		} else if (rbird == 'red') {
+			birds[i] = new Bird(birdRed);
+		} else if (rbird == 'blue') {
+			birds[i] = new Bird(birdBlue);
+		}
 	}
+	
 	
 }
 
@@ -110,8 +118,11 @@ function menu() {
 	}
 
 	// SPRITES DRAW
-	bird.idle();
-	bird.show();
+	for (let i = birds.length - 1; i >= 0; i--) {
+		birds[i].idle();
+		birds[i].show();
+	}
+	
 
 	// GROUND DRAW & PARALLAX
 	for (var i = 0; i < grounds.length; i++) {
@@ -135,27 +146,33 @@ function game() {
 		pipes[i].show();
 
 		// PIPE COLLISION & POINT DETECTION
-		if (pipes[i].hits(bird)) {
-			console.log("HIT");
-			gamestate = 2;
-		} if (pipes[i].point(bird)) {
-			console.log("POINT");
-			score += 1;
+		for (let j = birds.length - 1; j >= 0; j--) {
+			if (pipes[i].hits(birds[j])) {
+				birds.splice(j, 1);
+			}//if (pipes[i].point(birds[j])) {
+			//	console.log("POINT");
+			//	score += 1;
+			//}
 		}
 	}
 
 	// SCORE DRAW
 	text(score, width/2, 100);
 
-	// BIRD GROUND DETECTION & DRAW & UPDATE
-	if (bird.y > height - 160 || bird.y < -20) {
-		console.log("HIT")
-		gamestate = 2;
-	} else {
-		bird.think(pipes);
-		bird.update();
-		bird.show();
+	if (birds.length === 0) {
+		nextGeneration();
+		reset();
 	}
+
+	for (let i = birds.length - 1; i >= 0; i--) {
+		if (birds[i].y > height - 160 || birds[i].y < -20) {
+			birds.splice(i, 1);
+		} else {
+			birds[i].think(pipes);
+			birds[i].update();
+			birds[i].show();
+		}
+	} 
 
 	// GROUND DRAW & PARALLAX
 	for (var i = 0; i < grounds.length; i++) {
@@ -183,26 +200,63 @@ function gameover() {
 	}
 
 	// BIRD DRAW
-	bird.dead();
-	bird.show();
+	for (var i = 0; i < TOTAL; i++) {
+		birds[i].dead();
+		birds[i].show();
+	}
 
 	// GROUND DRAW
 	for (var i = 0; i < grounds.length; i++) {
 		grounds[i].show();
-	}
-	
+	}	
+}
+
+function reset() {
 	gamestate = 1;
 	backdrops = [];
 	grounds = [];
 	pipes = [];
 	score = 0;
 	console.log(highscore);
-	setup();
+	
+	// CREATE BACKDROPS + RANDOMIZER
+	var rbackdrop = random(randombackdrop);
+	for (var i = 0; i < 5; i++) {
+		var backdrop;
+		if (rbackdrop == 'day') {
+			backdrop = new Backdrop(i * 402, bgDay);
+			backdrops.push(backdrop);
+		} else if (rbackdrop == 'night') {
+			backdrop = new Backdrop(i * 402, bgNight);
+			backdrops.push(backdrop);
+		}
+	}
+
+	// CREATE PIPES + RANDOMIZER
+	var rpipe = random(randompipe);
+	for (var i = 0; i < 6; i++) {
+		var pipe;
+		if (rpipe == 'green') {
+			pipe = new Pipe(width + (i * 256), pipeGreenTop, pipeGreenBottom);
+			pipes.push(pipe);
+		} else if (rpipe == 'red') {
+			pipe = new Pipe(width + (i * 256), pipeRedTop, pipeRedBottom);
+			pipes.push(pipe);
+		}
+	}
+	// CREATE GROUNDS
+	for (var i = 0; i < 5; i++) {
+		var ground;
+		ground = new Ground(i * 420);
+		grounds.push(ground);
+	}
 }
 
 // KEY DETECTION
-// function keyPressed() {
-// 	if (key == ' ') {
-// 		bird.up();
-// 	}
-// }
+function keyPressed() {
+	if (key == ' ') {
+		if (gamestate == 0) {
+			gamestate = 1;
+		}
+	}
+}

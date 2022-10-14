@@ -1,12 +1,11 @@
-const TOTAL = 500;
-var totalPopulation = 500;
+var totalPopulation = 750;
 var allBirds = [];
 var smartestBird;
 var generation = 1;
 
 var bgDay, bgNight, ground, pipeGreenBottom, pipeGreenTop, pipeRedBottom, pipeRedTop, birdYellow, birdRed, birdBlue, taptap, gameOver;
 var gameSize = [1280, 720];
-var gamestate = 0;
+var gamestate = 1;
 var birds = [];
 var backdrops = [];
 var grounds = [];
@@ -42,7 +41,7 @@ function preload() {
 // SETUP
 function setup() {
 	createCanvas(gameSize[0], gameSize[1]);
-	frameRate(60);
+	frameRate(50);
 	textFont(scoreFont);
 	stroke('#111');
 	strokeWeight(10);
@@ -120,6 +119,10 @@ function game() {
 		pipes[i].update();
 		pipes[i].show();
 
+		if (pipes[i].x < 0 - pipes[i].w) {
+			pipes.splice(i, 1);
+		}
+
 		// PIPE COLLISION
 		for (let j = birds.length - 1; j >= 0; j--) {
 			if (pipes[i].hits(birds[j])) {
@@ -129,11 +132,9 @@ function game() {
 	}
 	
 	if (frameCount % 90 == 0) {
-		console.log('SPAWNED PIPE')
         score++;
 		let height = random(pipeheights);
 		pipes.push(new Pipe(width, height, pipeGreenTop, pipeGreenBottom));
-		console.log(pipes)
 	}
 
 	if (score > 0) {
@@ -181,15 +182,9 @@ function game() {
 	}
 
 	for (let i = birds.length - 1; i >= 0; i--) {
-		if (birds[i].y > height - 160) {
-			birds[i].y = height - 161;
-		} else if (birds[i].y < 0) {
-			birds[i].y = 1;
-		} else {
-			birds[i].think(pipes);
-			birds[i].update();
-			birds[i].show();
-		}
+		birds[i].think(pipes);
+		birds[i].update();
+		birds[i].show();
 	}
 }
 
@@ -205,10 +200,7 @@ function reset() {
 	score = -3;
 	generation += 1;
 	
-	console.log(smartestBird);
-	console.log("MAKING NEW BIRDS")
 	newBirds();
-	console.log("MADE NEW BIRDS")
 	
 	// CREATE BACKDROPS + RANDOMIZER
 	rbackdrop = random(randombackdrop);

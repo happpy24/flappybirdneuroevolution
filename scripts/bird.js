@@ -29,7 +29,7 @@ class Bird {
 	}
 
 	up() {
-		this.vy = -10;
+		this.vy = -13;
 	}
 
 	idle() {
@@ -62,7 +62,7 @@ class Bird {
 		let record = Infinity;
 		
 		for (let i = 0; i < pipes.length; i++) {
-			let diff = pipes[i].x - this.x;
+			let diff = pipes[i].x + 20 - this.x;
 			if (diff > 0 && diff < record) {
 				record = diff;
 				closest = pipes[i];
@@ -75,7 +75,7 @@ class Bird {
       		inputs[1] = map(closest.y + closest.h, 0, height, 0, 1);
       		inputs[2] = map(closest.bottom, 0, height, 0, 1);
       		inputs[3] = map(this.y, 0, height, 0, 1);
-      		inputs[4] = map(this.vy, -10, 10, 0, 1);
+      		inputs[4] = map(this.vy, -13, 15, 0, 1);
 
 			let action = this.brain.predict(inputs);
 			
@@ -86,8 +86,13 @@ class Bird {
 	}
 
 	update() {
-		this.score++;
-		this.vy += this.gravity;
-		this.y += this.vy;
+		if (this.y > height - 160) {
+			this.y = height - 160;
+		} else if (this.y < 0) {
+			this.y = 1;
+		} else {
+			this.vy += this.gravity;
+			this.y += this.vy;
+		}
 	}
 }

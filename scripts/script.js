@@ -1,19 +1,21 @@
 const TOTAL = 500;
+var totalPopulation = 500;
+var allBirds = [];
+var smartestBird;
+var generation = 0;
+
 var bgDay, bgNight, ground, pipeGreenBottom, pipeGreenTop, pipeRedBottom, pipeRedTop, birdYellow, birdRed, birdBlue, taptap, gameOver;
 var gameSize = [1280, 720];
 var gamestate = 0;
 var birds = [];
-var savedBirds = [];
 var backdrops = [];
 var grounds = [];
 var pipes = [];
-var score = 0;
+var score = -3;
 var highscore = 0;
-var randompipe = ['green', 'red'];
+var pipeheights = [-350, -300, -250, -200, -150, -100, -50];
 var randombackdrop = ['day', 'night'];
 var randombird = ['yellow', 'red', 'blue'];
-
-// 16:00 MIN CODING CHALLENGE 2!!!!!!!
 
 function preload() {
 	// BACKGROUNDS
@@ -24,8 +26,6 @@ function preload() {
 	// PIPES
 	pipeGreenBottom = loadImage('sprites/pipes/pipeGreenBottom.png');
 	pipeGreenTop = loadImage('sprites/pipes/pipeGreenTop.png');
-	pipeRedBottom = loadImage('sprites/pipes/pipeRedBottom.png');
-	pipeRedTop = loadImage('sprites/pipes/pipeRedTop.png');
 
 	// BIRDS
 	birdYellow = loadImage('sprites/birdYellow.png');
@@ -42,7 +42,7 @@ function preload() {
 // SETUP
 function setup() {
 	createCanvas(gameSize[0], gameSize[1]);
-	frameRate(50);
+	frameRate(60);
 	textFont(scoreFont);
 	stroke('#111');
 	strokeWeight(10);
@@ -62,19 +62,7 @@ function setup() {
 			backdrops.push(backdrop);
 		}
 	}
-
-	// CREATE PIPES + RANDOMIZER
-	var rpipe = random(randompipe);
-	for (var i = 0; i < 6; i++) {
-		var pipe;
-		if (rpipe == 'green') {
-			pipe = new Pipe(width + (i * 256), pipeGreenTop, pipeGreenBottom);
-			pipes.push(pipe);
-		} else if (rpipe == 'red') {
-			pipe = new Pipe(width + (i * 256), pipeRedTop, pipeRedBottom);
-			pipes.push(pipe);
-		}
-	}
+	
 	// CREATE GROUNDS
 	for (var i = 0; i < 5; i++) {
 		var ground;
@@ -83,18 +71,7 @@ function setup() {
 	}
 
 	// CREATE POPULATION
-	for (let i = 0; i < TOTAL; i++) {
-		var rbird = random(randombird);
-		if (rbird == 'yellow') {
-			birds[i] = new Bird(birdYellow);
-		} else if (rbird == 'red') {
-			birds[i] = new Bird(birdRed);
-		} else if (rbird == 'blue') {
-			birds[i] = new Bird(birdBlue);
-		}
-	}
-	
-	
+	newBirds()
 }
 
 // MAIN DRAW FUNCTION -> 50FPS
@@ -104,8 +81,6 @@ function draw() {
 		menu();
 	} else if (gamestate === 1) {
 		game();
-	} else if (gamestate === 2) {
-		gameover();
 	}
 }
 
@@ -145,82 +120,75 @@ function game() {
 		pipes[i].update();
 		pipes[i].show();
 
-		// PIPE COLLISION & POINT DETECTION
+		// PIPE COLLISION
 		for (let j = birds.length - 1; j >= 0; j--) {
 			if (pipes[i].hits(birds[j])) {
 				birds.splice(j, 1);
-			}//if (pipes[i].point(birds[j])) {
-			//	console.log("POINT");
-			//	score += 1;
-			//}
+			}
 		}
 	}
+	
+	if (frameCount % 100 == 0) {
+		console.log('SPAWNED PIPE')
+        score++;
+		let height = random(pipeheights);
+		pipes.push(new Pipe(width, height, pipeGreenTop, pipeGreenBottom));
+		console.log(pipes)
+	}
 
-	// SCORE DRAW
-	text(score, width/2, 100);
+	if (score > 0) {
+		text(score, width/2, 100);
+	} else {
+		text(0, width/2, 100);
+	}
+	
+	
+
+	if (birds.length === 1) {
+		smartestBird = birds[0];
+	}
 
 	if (birds.length === 0) {
-		nextGeneration();
 		reset();
 	}
-
-	for (let i = birds.length - 1; i >= 0; i--) {
-		if (birds[i].y > height - 160 || birds[i].y < -20) {
-			birds.splice(i, 1);
-		} else {
-			birds[i].think(pipes);
-			birds[i].update();
-			birds[i].show();
-		}
-	} 
-
+	
 	// GROUND DRAW & PARALLAX
 	for (var i = 0; i < grounds.length; i++) {
 		grounds[i].update();
 		grounds[i].show();
 	}
-}
 
-// GAMESTATE = 2
-function gameover() {
-	// BACKDROP DRAW
-	for (var i = 0; i < backdrops.length; i++) {
-		backdrops[i].show();
+	for (let i = birds.length - 1; i >= 0; i--) {
+		if (birds[i].y > height - 160) {
+			birds[i].y = height - 165;
+		} else if (birds[i].y < -20) {
+			birds[i].y = 0;
+		} else {
+			birds[i].think(pipes);
+			birds[i].update();
+			birds[i].show();
+		}
 	}
-
-	// PIPE DRAW
-	for (var i = 0; i < pipes.length; i++) {
-		pipes[i].show();
-	}
-
-	// SCORE DRAW & UPDATER
-	text(score, width/2, 100);
-	if (score >= highscore) {
-		highscore = score;
-	}
-
-	// BIRD DRAW
-	for (var i = 0; i < TOTAL; i++) {
-		birds[i].dead();
-		birds[i].show();
-	}
-
-	// GROUND DRAW
-	for (var i = 0; i < grounds.length; i++) {
-		grounds[i].show();
-	}	
 }
 
 function reset() {
-	gamestate = 1;
+	console.log("RESET")
+	gamestate = 0;
 	backdrops = [];
 	grounds = [];
 	pipes = [];
-	score = 0;
+	if (score > highscore) {
+		highscore = score;
+	}
+	score = -3;
 	console.log(highscore);
 	
+	console.log("MAKING NEW BIRDS")
+	newBirds();
+	console.log("MADE NEW BIRDS")
+	
 	// CREATE BACKDROPS + RANDOMIZER
-	var rbackdrop = random(randombackdrop);
+	rbackdrop = random(randombackdrop);
 	for (var i = 0; i < 5; i++) {
 		var backdrop;
 		if (rbackdrop == 'day') {
@@ -231,25 +199,28 @@ function reset() {
 			backdrops.push(backdrop);
 		}
 	}
-
-	// CREATE PIPES + RANDOMIZER
-	var rpipe = random(randompipe);
-	for (var i = 0; i < 6; i++) {
-		var pipe;
-		if (rpipe == 'green') {
-			pipe = new Pipe(width + (i * 256), pipeGreenTop, pipeGreenBottom);
-			pipes.push(pipe);
-		} else if (rpipe == 'red') {
-			pipe = new Pipe(width + (i * 256), pipeRedTop, pipeRedBottom);
-			pipes.push(pipe);
-		}
-	}
+	
 	// CREATE GROUNDS
 	for (var i = 0; i < 5; i++) {
 		var ground;
 		ground = new Ground(i * 420);
 		grounds.push(ground);
 	}
+	
+	gamestate = 1;
+}
+
+function newBirds() {
+    for (let i = 0; i < totalPopulation; i++) {
+    	let bird;
+    	if (smartestBird){
+    		bird = new Bird(birdRed, smartestBird.brain);
+    	} else {
+        	bird = new Bird(birdYellow);
+    	}
+    	birds[i] = bird;
+    	allBirds[i] = bird;
+  	}  
 }
 
 // KEY DETECTION

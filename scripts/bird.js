@@ -1,23 +1,38 @@
-function Bird(img) {
-	this.img = img;
-	this.x = 300
-	this.y = 288;
-	this.gravity = 1;
-	this.vy = 0;
+function mutate(x) {
+  	if (random(1) < 0.1) {
+    	let offset = randomGaussian() * 0.5;
+    	let newx = x + offset;
+    	return newx;
+  	} else {
+    	return x;
+  	}
+}
 
-	this.score = 0;
-	this.fitniss = 0;
-	this.brain = new NeuralNetwork(5,8,2);
-
-	this.show = function() {
-		image(img, this.x, this.y, 51, 36);
+class Bird {
+	constructor(img, brain) {
+		this.img = img;
+		this.x = 300;
+		this.y = 288;
+		this.gravity = 1;
+		this.vy = 0;
+	
+		if (brain instanceof NeuralNetwork) {
+        	this.brain = brain.copy();
+        	this.brain.mutate(mutate);
+    	} else {
+       		this.brain = new NeuralNetwork(5, 12, 2);
+    	}
 	}
 
-	this.up = function() {
+	show() {
+		image(this.img, this.x, this.y, 51, 36);
+	}
+
+	up() {
 		this.vy = -13;
 	}
 
-	this.idle = function() {
+	idle() {
 		if (this.y > 288 + 10) {
 			this.vy += -0.2;
 			this.y += this.vy;
@@ -28,7 +43,7 @@ function Bird(img) {
 		
 	}
 
-	this.dead = function() {
+	dead() {
 		this.vy += this.gravity;
 		this.y += this.vy;
 		
@@ -36,38 +51,41 @@ function Bird(img) {
 			this.y = height - 160;
 			this.vy = 0;
 		}
-	}
+	}	
 
-	this.think = function(pipes) {
-
-		let closestPipe = null;
-		let closestD = Infinity;
-		for (let i = 0; i < pipes.length; i++) {
-			let d = pipes[i].x - this.x;
-			if (i > 6) {
-				i = 0;
-			}
-			if (d < closestD && d > 0) {
-				closestPipe = pipes[i]
-				closestD = d;
-			}
+	think(pipes) {
+		if (pipes.length < 1) {
+			return;
 		}
 		
-		let inputs = [];
+		let closest;
+		let record = Infinity;
+		
+		for (let i = 0; i < pipes.length; i++) {
+			let diff = pipes[i].x - this.x;
+			if (diff > 0 && diff < record) {
+				closest = diff;
+				closest = pipes[i];
+			}
+		}
 
-		inputs[0] = map(closestPipe.x, this.x, width, 0, 1);
-		inputs[1] = map(closestPipe.y1, 0, height, 0, 1);
-		inputs[2] = map(closestPipe.y2, 0, height, 0, 1);
-		inputs[3] = map(this.y, 0, height, 0, 1);
-		inputs[4] = map(this.vy, -5, -5, 0, 1);
+		if (closest != null) {
+			let inputs = [];
+			inputs[0] = map(closest.x, this.x, width, 0, 1);
+      		inputs[1] = map(closest.y + 400, 0, height, 0, 1);
+      		inputs[2] = map(closest.bottom + 400, 0, height, 0, 1);
+      		inputs[3] = map(this.y, 0, height, 0, 1);
+      		inputs[4] = map(this.vy, -5, 5, 0, 1);
+
+			let action = this.brain.predict(inputs);
 			
-		let output = this.brain.predict(inputs);
-		if (output[0] < output[1]) {
-			this.up();
+			if (action[1] > action[0]) {
+				this.up();
+			}
 		}
 	}
 
-	this.update = function() {
+	update() {
 		this.score++;
 		this.vy += this.gravity;
 		this.y += this.vy;

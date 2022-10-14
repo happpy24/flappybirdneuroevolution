@@ -20,7 +20,7 @@ class Bird {
         	this.brain = brain.copy();
         	this.brain.mutate(mutate);
     	} else {
-       		this.brain = new NeuralNetwork(5, 12, 2);
+       		this.brain = new NeuralNetwork(5, 10, 2);
     	}
 	}
 
@@ -29,7 +29,7 @@ class Bird {
 	}
 
 	up() {
-		this.vy = -13;
+		this.vy = -10;
 	}
 
 	idle() {
@@ -64,7 +64,7 @@ class Bird {
 		for (let i = 0; i < pipes.length; i++) {
 			let diff = pipes[i].x - this.x;
 			if (diff > 0 && diff < record) {
-				closest = diff;
+				record = diff;
 				closest = pipes[i];
 			}
 		}
@@ -72,10 +72,10 @@ class Bird {
 		if (closest != null) {
 			let inputs = [];
 			inputs[0] = map(closest.x, this.x, width, 0, 1);
-      		inputs[1] = map(closest.y + 400, 0, height, 0, 1);
-      		inputs[2] = map(closest.bottom + 400, 0, height, 0, 1);
+      		inputs[1] = map(closest.y + closest.h, 0, height, 0, 1);
+      		inputs[2] = map(closest.bottom, 0, height, 0, 1);
       		inputs[3] = map(this.y, 0, height, 0, 1);
-      		inputs[4] = map(this.vy, -5, 5, 0, 1);
+      		inputs[4] = map(this.vy, -10, 10, 0, 1);
 
 			let action = this.brain.predict(inputs);
 			

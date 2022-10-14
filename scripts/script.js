@@ -2,7 +2,7 @@ const TOTAL = 500;
 var totalPopulation = 500;
 var allBirds = [];
 var smartestBird;
-var generation = 0;
+var generation = 1;
 
 var bgDay, bgNight, ground, pipeGreenBottom, pipeGreenTop, pipeRedBottom, pipeRedTop, birdYellow, birdRed, birdBlue, taptap, gameOver;
 var gameSize = [1280, 720];
@@ -128,7 +128,7 @@ function game() {
 		}
 	}
 	
-	if (frameCount % 100 == 0) {
+	if (frameCount % 90 == 0) {
 		console.log('SPAWNED PIPE')
         score++;
 		let height = random(pipeheights);
@@ -137,10 +137,32 @@ function game() {
 	}
 
 	if (score > 0) {
+		textFont(scoreFont);
+		stroke('#111');
+		strokeWeight(10);
+		fill(255, 255, 255);
+		textAlign(CENTER);
+		textSize(80);
 		text(score, width/2, 100);
 	} else {
+		textFont(scoreFont);
+		stroke('#111');
+		strokeWeight(10);
+		fill(255, 255, 255);
+		textAlign(CENTER);
+		textSize(80);
 		text(0, width/2, 100);
 	}
+	
+	textFont(scoreFont);
+	stroke('#111');
+	strokeWeight(2);
+	fill(255, 255, 255);
+	textAlign(LEFT);
+	textSize(20);
+	text("Generation: "+generation, 10, 20)
+	text("Highscore: "+highscore, 10, 40)
+	text("Alive Birds: "+birds.length, 10, 60)
 	
 	
 
@@ -160,9 +182,9 @@ function game() {
 
 	for (let i = birds.length - 1; i >= 0; i--) {
 		if (birds[i].y > height - 160) {
-			birds[i].y = height - 165;
-		} else if (birds[i].y < -20) {
-			birds[i].y = 0;
+			birds[i].y = height - 161;
+		} else if (birds[i].y < 0) {
+			birds[i].y = 1;
 		} else {
 			birds[i].think(pipes);
 			birds[i].update();
@@ -181,8 +203,9 @@ function reset() {
 		highscore = score;
 	}
 	score = -3;
-	console.log(highscore);
+	generation += 1;
 	
+	console.log(smartestBird);
 	console.log("MAKING NEW BIRDS")
 	newBirds();
 	console.log("MADE NEW BIRDS")

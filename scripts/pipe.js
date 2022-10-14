@@ -9,6 +9,7 @@ function Pipe(x, y, imagetop, imagebottom) {
 	this.vx = -3.5;
 
 	this.show = function() {
+		
 		image(this.imagetop, this.x, this.y, this.w, this.h)
 		image(this.imagebottom, this.x, this.bottom, this.w, this.h)
 	}
